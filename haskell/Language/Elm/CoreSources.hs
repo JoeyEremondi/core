@@ -48,7 +48,7 @@ nativeSources = Map.fromList $ map (\(x,y) -> (x, unpack y)) $ [
         ]
         
 stdlibSources :: [String]
-stdlibSources = sources = map unpack [$(embedFile  "core/src/Array.elm")
+stdlibSources = map unpack [$(embedFile  "core/src/Array.elm")
    ,$(embedFile  "core/src/Array.elm")
    ,$(embedFile  "core/src/Basics.elm")
    ,$(embedFile  "core/src/Bitwise.elm")
