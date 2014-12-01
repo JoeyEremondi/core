@@ -1,17 +1,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Language.Elm.CoreSources where
-   
+
 import Data.FileEmbed
-
-
 import qualified Data.Map as Map
-
 import Data.ByteString.Char8 (unpack)
 
 header :: String
 header =
    "var Elm = Elm || { Native: {} };\n"
   
+runtime :: String
 runtime =  unpack $(embedFile  "core/src/Native/Runtime.js")
 
 nativeSources :: Map.Map String String
