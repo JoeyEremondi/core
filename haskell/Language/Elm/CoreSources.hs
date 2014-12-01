@@ -2,18 +2,16 @@
 module Language.Elm.CoreSources where
 
 import Data.FileEmbed
-import qualified Data.Map as Map
 import Data.ByteString.Char8 (unpack)
 
 header :: String
-header =
-   "var Elm = Elm || { Native: {} };\n"
+header = "var Elm = Elm || { Native: {} };\n"
   
 runtime :: String
 runtime =  unpack $(embedFile  "src/Native/Runtime.js")
 
-nativeSources :: Map.Map String String
-nativeSources = Map.fromList $ map (\(x,y) -> (x, unpack y)) $ [
+nativeSources ::  [(String, String)]
+nativeSources = map (\(x,y) -> (x, unpack y)) $ [
         ("Native.Array", $(embedFile  "src/Native/Array.js"))
         , ("Native.Basics", $(embedFile  "src/Native/Basics.js"))
         , ("Native.Bitwise", $(embedFile  "src/Native/Bitwise.js"))
