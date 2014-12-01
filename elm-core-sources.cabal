@@ -43,7 +43,7 @@ source-repository head
 
 library
   exposed-modules: Language.Elm.CoreSources
-  hs-source-dirs:  /haskell
+  hs-source-dirs:  haskell
 
   build-depends:   base >=4.2 && <5
                    , containers
