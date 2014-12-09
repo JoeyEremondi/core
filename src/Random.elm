@@ -4,6 +4,7 @@ module Random
     , list, pair
     , minInt, maxInt
     , generate, initialSeed
+    , customGenerator
     )
   where
 
@@ -62,9 +63,10 @@ module. It has a period of roughly 2.30584e18.
 
 @docs maxInt, minInt
 
-# Creating Custom Generators
+# Custom Generators
 
-@docs Generator
+@docs customGenerator
+
 -}
 
 import Basics (..)
@@ -82,7 +84,8 @@ sufficient randomness is not guaranteed.
     int minInt maxInt  -- an integer in the widest range feasible
 -}
 int : Int -> Int -> Generator Int
-int a b seed =
+int a b =
+  Generator <| \seed ->
     let (lo,hi) = if a < b then (a,b) else (b,a)
 
         k = hi - lo + 1
@@ -106,12 +109,12 @@ iLogBase b i =
     if i < b then 1 else 1 + iLogBase b (i // b)
 
 
-{-| The maximum value for randomly generated for 32-bit ints. -}
+{-| The maximum value for randomly generated 32-bit ints. -}
 maxInt : Int
 maxInt = 2147483647
 
 
-{-| The minimum value for randomly generated for 32-bit ints. -}
+{-| The minimum value for randomly generated 32-bit ints. -}
 minInt : Int
 minInt = -2147483648
 
@@ -126,11 +129,12 @@ minInt = -2147483648
     -- generate probability seed1 ==> (0.04, seed2)
 -}
 float : Float -> Float -> Generator Float
-float a b seed =
+float a b =
+  Generator <| \seed ->
     let (lo, hi) = if a < b then (a,b) else (b,a)
 
         (number, seed') =
-            int minInt maxInt seed
+            generate (int minInt maxInt) seed
 
         negativeOneToOne =
             toFloat number / toFloat (maxInt - minInt)
@@ -152,31 +156,35 @@ wide and 200 pixels tall.
 
 -}
 pair : Generator a -> Generator b -> Generator (a,b)
-pair genLeft genRight seed =
+pair (Generator genLeft) (Generator genRight) =
+  Generator <| \seed ->
     let (left , seed' ) = genLeft seed
         (right, seed'') = genRight seed'
     in
         ((left,right), seed'')
 
 
-{-| Create a list of random values using a generator function.
+{-| Create a list of random values.
 
     floatList : Generator (List Float)
-    floatList = list 10 (float 0 1)
+    floatList =
+        list 10 (float 0 1)
 
     intList : Generator (List Int)
-    intList = list 5 (int 0 100)
+    intList =
+        list 5 (int 0 100)
 
     intPairs : Generator (List (Int, Int))
     intPairs =
         list 10 (pair int int)
 -}
 list : Int -> Generator a -> Generator (List a)
-list n gen =
-    listHelp [] n gen
+list n (Generator generate) =
+  Generator <| \seed ->
+    listHelp [] n generate seed
 
 
-listHelp : List a -> Int -> Generator a -> Generator (List a)
+listHelp : List a -> Int -> (Seed -> (a,Seed)) -> Seed -> (List a, Seed)
 listHelp list n generate seed =
     if n < 1
     then (List.reverse list, seed)
@@ -184,20 +192,30 @@ listHelp list n generate seed =
         let (value, seed') = generate seed
         in  listHelp (value :: list) (n-1) generate seed'
 
-{-| A `Generator` is a function that takes a seed, and then returns a random
-value and a new seed. The new seed is used to generate new random values. You
-can use this to define Generators of your own. For example, here is how
-`pair` is implemented.
 
-    pair : Generator a -> Generator b -> Generator (a,b)
-    pair genLeft genRight seed =
-        let (left , seed' ) = genLeft seed
-            (right, seed'') = genRight seed'
+{-| Create a custom generator. You provide a function that takes a seed, and
+returns a random value and a new seed. You can use this to create custom
+generators not covered by the basic functions in this library.
+
+    pairOf : Generator a -> Generator (a,a)
+    pairOf generator =
+      customGenerator <| \seed ->
+        let (left , seed' ) = generate generator seed
+            (right, seed'') = generate generator seed'
         in
             ((left,right), seed'')
+
 -}
-type alias Generator a =
-    Seed -> (a, Seed)
+customGenerator : (Seed -> (a, Seed)) -> Generator a
+customGenerator generate =
+    Generator generate
+
+
+{-| A `Generator` is a function that takes a seed, and then returns a random
+value and a new seed. The new seed is used to generate new random values.
+-}
+type Generator a =
+    Generator (Seed -> (a, Seed))
 
 type State = State Int Int
 
@@ -225,7 +243,7 @@ the same seed, you get the same results.
     -- generate (int 0 100) seed0 ==> (42, seed1)
 -}
 generate : Generator a -> Seed -> (a, Seed)
-generate generator seed =
+generate (Generator generator) seed =
     generator seed
 
 
