@@ -4,12 +4,22 @@ module Language.Elm.CoreSources where
 import Data.FileEmbed
 import Data.ByteString.Char8 (unpack)
 
+{-|
+JavaScript Header to append at the beginning of a complete, linked Elm program.
+-}
 header :: String
 header = "var Elm = Elm || { Native: {} };\n"
   
+{-|
+Source for the Elm Runtime library
+-}
 runtime :: String
 runtime =  unpack $(embedFile  "src/Native/Runtime.js")
 
+{-|
+Dictionary mapping strings of the form "Native.ModuleName" to the JS source code
+for that stdlib native module.
+-}
 nativeSources ::  [(String, String)]
 nativeSources = map (\(x,y) -> (x, unpack y)) $ [
         ("Native.Array", $(embedFile  "src/Native/Array.js"))
@@ -44,7 +54,10 @@ nativeSources = map (\(x,y) -> (x, unpack y)) $ [
 
 
         ]
-        
+
+{-|
+List of .elm sources for the Elm Standard Library
+-}        
 stdlibSources :: [String]
 stdlibSources = map unpack [$(embedFile  "src/Array.elm")
    ,$(embedFile  "src/Array.elm")
