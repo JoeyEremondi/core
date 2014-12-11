@@ -30,14 +30,8 @@ Extra-source-files: src/*.elm
     
     src/Native/*.js
     
-    ,src/Native/Json/*.js
-
     ,src/Native/Graphics/*.js
-     
-    ,src/Native/Graphics/Input/*.js
-    
-    ,src/Native/Graphics/Input/*.js
-
+         
 source-repository head
   type: git
   location: git://github.com/JoeyEremondi/elm-build-lib
